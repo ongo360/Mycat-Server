@@ -166,10 +166,10 @@ public class PartitionBySubstringRange extends AbstractPartitionAlgorithm implem
         }
 
         int total = columnValue.length();
-        if (total < length) {
-            throw new RuntimeException("Too short column value for PartitionBySubstringRange: "
-                    + columnValue + " (>=" + length + " characters required)");
-        }
+//        if (total < length) {
+//            throw new RuntimeException("Too short column value for PartitionBySubstringRange: "
+//                    + columnValue + " (>=" + length + " characters required)");
+//        }
 
         int from = fromIndex < 0 ? fromIndex - length + 1 : fromIndex;
         int end = from + length;
