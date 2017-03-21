@@ -23,17 +23,16 @@
  */
 package io.mycat.route;
 
-import java.io.Serializable;
-import java.util.Map;
-import java.util.Set;
-
 import io.mycat.server.parser.ServerParse;
 import io.mycat.sqlengine.mpp.LoadData;
+
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author mycat
  */
-public final class RouteResultsetNode implements Serializable , Comparable<RouteResultsetNode> {
+public final class RouteResultsetNode implements Serializable {
 	/**
 	 *
 	 */
@@ -270,27 +269,27 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 	}
 	
 
-	@Override
-	public int compareTo(RouteResultsetNode obj) {
-		if(obj == null) {
-			return 1;
-		}
-		if(this.name == null) {
-			return -1;
-		}
-		if(obj.name == null) {
-			return 1;
-		}
-		int c = this.name.compareTo(obj.name);
-		if(!this.isDisctTable()){
-			return c;
-		}else{
-			if(c==0){
-				return this.subTableName.compareTo(obj.subTableName);
-			}
-			return c;
-		}
-	}
+//	@Override
+//	public int compareTo(RouteResultsetNode obj) {
+//		if(obj == null) {
+//			return 1;
+//		}
+//		if(this.name == null) {
+//			return -1;
+//		}
+//		if(obj.name == null) {
+//			return 1;
+//		}
+//		int c = this.name.compareTo(obj.name);
+//		if(!this.isDisctTable()){
+//			return c;
+//		}else{
+//			if(c==0){
+//				return this.subTableName.compareTo(obj.subTableName);
+//			}
+//			return c;
+//		}
+//	}
 	
 	public boolean isHasBlanceFlag() {
 		return hasBlanceFlag;
