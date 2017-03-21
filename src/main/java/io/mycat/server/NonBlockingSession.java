@@ -100,7 +100,6 @@ public class NonBlockingSession implements Session {
         return target.remove(key);
     }
 
-    // CHENBO: 返回上次操作的节点信息
     public SingleNodeHandler getSingleNodeHandler() {
         return this.singleNodeHandler;
     }
@@ -169,7 +168,9 @@ public class NonBlockingSession implements Session {
         switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
             case 1:
                 source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
-                source.setTxInterrupt("Distributed transaction is disabled!");
+                if(!autocommit){
+                    source.setTxInterrupt("Distributed transaction is disabled!");
+                }
                 break;
             case 2:
                 LOGGER.warn("Distributed transaction detected! RRS:" + rrs);
