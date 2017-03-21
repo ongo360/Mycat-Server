@@ -1127,6 +1127,7 @@ public class RouterUtil {
 		for(Map.Entry<String, Map<String, Set<ColumnRoutePair>>> entry : tablesAndConditions.entrySet()) {
 			Map<String, Set<ColumnRoutePair>> columnsMap = entry.getValue();
 
+			// CHENBO: 满足一条规则即可
 			String partionCol = null;
 			RuleConfig[] rules = tableConfig.getRules();
 			if (rules != null) {
@@ -1277,6 +1278,7 @@ public class RouterUtil {
 					}
 				}
 
+				// CHENBO: 满足一条规则即可
 				String partionCol = null;
                 RuleConfig[] rules = tableConfig.getRules();
                 if (rules != null) {
@@ -1423,6 +1425,7 @@ public class RouterUtil {
 			return true;
 		}
 
+		// CHENBO: 满足一条规则即可
 		Map<String, Boolean> colMap = new CaseInsensitiveMap();
 		RuleConfig[] rules = tc.getRules();
 		if (rules != null) {

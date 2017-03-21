@@ -119,6 +119,7 @@ public class SingleNodeHandler implements ResponseHandler, Terminatable, LoadDat
         
 	}
 
+	// CHENBO: 返回节点信息
 	public RouteResultsetNode getNode() {
 		return this.node;
 	}

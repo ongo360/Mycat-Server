@@ -4,8 +4,9 @@
 
 	<schema name="sk_dev" checkSQLschema="true" sqlMaxLimit="100" dataNode="dn1">
 		<table name="User" primaryKey="id" dataNode="dn1,dn2" rule="rule_user" ruleRequired="true" />
-		<table name="OrderForm" primaryKey="id" dataNode="dn1,dn2" rule="rule_order_form" ruleRequired="true" />
-		<table name="OrderDetail" primaryKey="id" dataNode="dn1,dn2" rule="rule_order_detail" ruleRequired="true" />
+		<table name="OrderForm" primaryKey="id" dataNode="dn1" subTables="OrderForm_A,OrderForm_B" rule="rule_order_form" ruleRequired="true" />
+		<table name="OrderDetail" primaryKey="id" dataNode="dn1" subTables="OrderDetail_A,OrderDetail_B" rule="rule_order_detail" ruleRequired="true" />
+		<table name="Task" primaryKey="id" dataNode="dn1,dn2" rule="rule_task" />
 	</schema>
 
 	<dataNode name="dn1" dataHost="dbhost1" database="sk_dev" />

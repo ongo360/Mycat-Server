@@ -15,7 +15,7 @@ import java.sql.SQLNonTransientException;
 import java.util.Map;
 
 /**
- * Created by jackychenb on 27/12/2016.
+ * CHENBO: mycat:tag=current_data_node
  */
 public class TagHandler implements HintHandler {
 

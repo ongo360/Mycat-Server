@@ -100,6 +100,7 @@ public class NonBlockingSession implements Session {
         return target.remove(key);
     }
 
+    // CHENBO: 返回上次操作的节点信息
     public SingleNodeHandler getSingleNodeHandler() {
         return this.singleNodeHandler;
     }

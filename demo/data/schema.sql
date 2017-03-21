@@ -24,6 +24,30 @@ create table OrderForm (
 
 create index IX_OrderForm_userId_gmtCreated on OrderForm(userId, gmtCreated);
 
+drop table if exists OrderForm_A;
+create table OrderForm_A (
+    id varchar(40) not null,
+    userId varchar(40) not null,
+    number varchar(20) not null,
+    amount decimal(20,2) not null,
+    gmtCreated datetime not null,
+    primary key(id)
+);
+
+create index IX_OrderForm_A_userId_gmtCreated on OrderForm_A(userId, gmtCreated);
+
+drop table if exists OrderForm_B;
+create table OrderForm_B (
+    id varchar(40) not null,
+    userId varchar(40) not null,
+    number varchar(20) not null,
+    amount decimal(20,2) not null,
+    gmtCreated datetime not null,
+    primary key(id)
+);
+
+create index IX_OrderForm_B_userId_gmtCreated on OrderForm_B(userId, gmtCreated);
+
 drop table if exists OrderDetail;
 create table OrderDetail (
     id varchar(40) not null,
@@ -37,6 +61,34 @@ create table OrderDetail (
 );
 
 create index IX_OrderDetail_orderFormId on OrderDetail(orderFormId);
+
+drop table if exists OrderDetail_A;
+create table OrderDetail_A (
+    id varchar(40) not null,
+    orderFormId varchar(40) not null,
+    itemNo varchar(20) not null,
+    itemName varchar(100) not null,
+    price decimal(20,2) not null,
+    qty int not null,
+    amount decimal(20,2) not null,
+    primary key(id)
+);
+
+create index IX_OrderDetail_A_orderFormId on OrderDetail_A(orderFormId);
+
+drop table if exists OrderDetail_B;
+create table OrderDetail_B (
+    id varchar(40) not null,
+    orderFormId varchar(40) not null,
+    itemNo varchar(20) not null,
+    itemName varchar(100) not null,
+    price decimal(20,2) not null,
+    qty int not null,
+    amount decimal(20,2) not null,
+    primary key(id)
+);
+
+create index IX_OrderDetail_B_orderFormId on OrderDetail_B(orderFormId);
 
 drop table if exists Task;
 create table Task (

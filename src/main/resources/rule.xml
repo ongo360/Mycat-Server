@@ -35,6 +35,12 @@
 			<algorithm>func_order_detail_orderFormId</algorithm>
 		</rule>
 	</tableRule>
+	<tableRule name="rule_task">
+		<rule>
+			<columns>id</columns>
+			<algorithm>func_task_id</algorithm>
+		</rule>
+	</tableRule>
 	<function name="func_user_id" class="io.mycat.route.function.PartitionBySubstringRange">
 		<property name="fromIndex">-1</property>
 		<property name="length">2</property>
@@ -59,5 +65,10 @@
 		<property name="fromIndex">-1</property>
 		<property name="length">2</property>
 		<property name="mapFile">/order-partition.txt</property>
+	</function>
+	<function name="func_task_id" class="io.mycat.route.function.PartitionBySubstringRange">
+		<property name="fromIndex">-1</property>
+		<property name="length">2</property>
+		<property name="mapFile">/task-partition.txt</property>
 	</function>
 </mycat:rule>

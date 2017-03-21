@@ -1,4 +1,3 @@
-use sk_dev;
 
 /*!mycat:dataNode=dn1*/ drop function if exists getTaskZoneCode;
 /*!mycat:dataNode=dn2*/ drop function if exists getTaskZoneCode;

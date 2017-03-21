@@ -218,15 +218,20 @@ public final class RouteResultsetNode implements Serializable , Comparable<Route
 		}
 		if (obj instanceof RouteResultsetNode) {
 			RouteResultsetNode rrn = (RouteResultsetNode) obj;
-			if(subTableName!=null){
-				if (equals(name, rrn.getName()) && equals(subTableName, rrn.getSubTableName())) {
-					return true;
-				}
-			}else{
+
+			// CHENBO:
+			// 同一个库共用一个BackendConnection。
+			// 注意：目前Mycat仅把RouteResultsetNode作为Map<RouteResultsetNode, BackendConnection>的Key，因此可以这么修改。
+
+//			if(subTableName!=null){
+//				if (equals(name, rrn.getName()) && equals(subTableName, rrn.getSubTableName())) {
+//					return true;
+//				}
+//			}else{
 				if (equals(name, rrn.getName())) {
 					return true;
 				}
-			}
+//			}
 		}
 		return false;
 	}

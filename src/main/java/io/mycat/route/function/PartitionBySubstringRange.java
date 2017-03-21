@@ -194,7 +194,8 @@ public class PartitionBySubstringRange extends AbstractPartitionAlgorithm implem
 
 
     public int getPartitionNum() {
-        return nodeIndexes.length;
+//        return nodeIndexes.length;
+        return -1;
     }
 
     @Override
