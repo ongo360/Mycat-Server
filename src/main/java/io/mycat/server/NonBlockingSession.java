@@ -168,8 +168,8 @@ public class NonBlockingSession implements Session {
     private void checkDistriTransaxAndExecute(RouteResultset rrs, int type,boolean autocommit) throws Exception {
         switch(MycatServer.getInstance().getConfig().getSystem().getHandleDistributedTransactions()) {
             case 1:
-                source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
                 if(!autocommit){
+                    source.writeErrMessage(ErrorCode.ER_NOT_ALLOWED_COMMAND, "Distributed transaction is disabled!");
                     source.setTxInterrupt("Distributed transaction is disabled!");
                 }
                 break;
