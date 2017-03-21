@@ -1102,8 +1102,9 @@ public class RouterUtil {
 			String msg = "can't suport district table  " + tableName + " schema:" + schema.getName() + " for global table ";
 			LOGGER.warn(msg);
 			throw new SQLNonTransientException(msg);
-		} 
-		String partionCol = tableConfig.getPartitionColumn();
+		}
+
+//		String partionCol = tableConfig.getPartitionColumn();
 //		String primaryKey = tableConfig.getPrimaryKey();
         boolean isLoadData=false;
         
@@ -1124,8 +1125,18 @@ public class RouterUtil {
         }
         
 		for(Map.Entry<String, Map<String, Set<ColumnRoutePair>>> entry : tablesAndConditions.entrySet()) {
-			boolean isFoundPartitionValue = partionCol != null && entry.getValue().get(partionCol) != null;
 			Map<String, Set<ColumnRoutePair>> columnsMap = entry.getValue();
+
+			String partionCol = null;
+			RuleConfig[] rules = tableConfig.getRules();
+			if (rules != null) {
+				for (RuleConfig rule : rules) {
+					String col = rule.getColumn();
+					if (columnsMap.get(col) != null) {
+						partionCol = col;
+					}
+				}
+			}
 			
 			Set<ColumnRoutePair> partitionValue = columnsMap.get(partionCol);
 			if(partitionValue == null || partitionValue.size() == 0) {
