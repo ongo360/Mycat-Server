@@ -1,9 +1,9 @@
 
-/** mycat:dataNode=dn1 */ drop function if exists getTaskZoneCode;
-/** mycat:dataNode=dn2 */ drop function if exists getTaskZoneCode;
+/*!mycat:dataNode=dn1*/ drop function if exists getTaskZoneCode;
+/*!mycat:dataNode=dn2*/ drop function if exists getTaskZoneCode;
 
-/** mycat:dataNode=dn1 */ create function getTaskZoneCode() returns char(2) deterministic return('00');
-/** mycat:dataNode=dn2 */ create function getTaskZoneCode() returns char(2) deterministic return('01');
+/*!mycat:dataNode=dn1*/ create function getTaskZoneCode() returns char(2) deterministic return('00');
+/*!mycat:dataNode=dn2*/ create function getTaskZoneCode() returns char(2) deterministic return('01');
 
 insert into User
 (id, name, zoneCode)
