@@ -357,13 +357,7 @@ public class DruidSelectParser extends DefaultDruidParser {
 				SQLTableSource from = mysqlSelectQuery.getFrom();
 
 				// CHENBO:
-				SQLExprTableSource toReplace = null;
-				if (from instanceof SQLJoinTableSource) {
-					toReplace = findTableSource((SQLJoinTableSource) from, rrs.getTableName());
-				} else if (from instanceof SQLExprTableSource) {
-					toReplace = (SQLExprTableSource) from;
-				}
-
+				SQLExprTableSource toReplace = findTableSource(from, rrs.getTableName());
 				for (RouteResultsetNode node : rrs.getNodes()) {
 					if (toReplace != null) {
 						SQLIdentifierExpr expr = new SQLIdentifierExpr(node.getSubTableName());
@@ -379,6 +373,29 @@ public class DruidSelectParser extends DefaultDruidParser {
 		
 	}
 
+	private SQLExprTableSource findTableSource(SQLSelectQuery slt, String tableName) {
+		if (slt instanceof SQLSelectQueryBlock) {
+			return findTableSource((SQLSelectQueryBlock) slt, tableName);
+		} else if (slt instanceof SQLUnionQuery) {
+			return findTableSource((SQLUnionQuery) slt, tableName);
+		}
+
+		return null;
+	}
+
+	private SQLExprTableSource findTableSource(SQLSelectQueryBlock slt, String tableName) {
+		return findTableSource(slt.getFrom(), tableName);
+	}
+
+	private SQLExprTableSource findTableSource(SQLUnionQuery union, String tableName) {
+		SQLExprTableSource src = findTableSource(union.getLeft(), tableName);
+		if (src != null) {
+			return src;
+		}
+
+		return findTableSource(union.getRight(), tableName);
+	}
+
 	private SQLExprTableSource findTableSource(SQLJoinTableSource join, String tableName) {
 		SQLExprTableSource result = findTableSource(join.getLeft(), tableName);
 		if (result != null) {
@@ -386,6 +403,14 @@ public class DruidSelectParser extends DefaultDruidParser {
 		}
 
 		return findTableSource(join.getRight(), tableName);
+	}
+
+	private SQLExprTableSource findTableSource(SQLSubqueryTableSource subquery, String tableName) {
+		return findTableSource(subquery.getSelect().getQuery(), tableName);
+	}
+
+	private SQLExprTableSource findTableSource(SQLUnionQueryTableSource union, String tableName) {
+		return findTableSource(union.getUnion(), tableName);
 	}
 
 	private SQLExprTableSource findTableSource(SQLTableSource src, String tableName) {
@@ -398,6 +423,10 @@ public class DruidSelectParser extends DefaultDruidParser {
 			}
 		} else if (src instanceof SQLJoinTableSource) {
 			return findTableSource((SQLJoinTableSource) src, tableName);
+		} else if (src instanceof SQLSubqueryTableSource) {
+			return findTableSource((SQLSubqueryTableSource) src, tableName);
+		} else if (src instanceof SQLUnionQueryTableSource) {
+			return findTableSource((SQLUnionQueryTableSource) src, tableName);
 		}
 
 		return null;
