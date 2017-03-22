@@ -326,9 +326,10 @@ public class NonBlockingSession implements Session {
         RouteResultsetNode node = (RouteResultsetNode) conn.getAttachment();
 
         if (node != null) {
-            if (node.isDisctTable()) {
-                return;
-            }
+            // CHENBO: 为何分表不释放链接？暂时去掉这个逻辑
+//            if (node.isDisctTable()) {
+//                return;
+//            }
             if ((this.source.isAutocommit() || conn.isFromSlaveDB()
                     || !conn.isModifiedSQLExecuted()) && !this.source.isLocked()) {
                 releaseConnection((RouteResultsetNode) conn.getAttachment(), LOGGER.isDebugEnabled(), needRollback);
