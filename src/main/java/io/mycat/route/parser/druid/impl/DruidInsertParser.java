@@ -18,6 +18,7 @@ import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlInsertStatement;
 import io.mycat.backend.mysql.nio.handler.FetchStoreNodeOfChildTableHandler;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.config.model.TableConfig;
+import io.mycat.config.model.rule.RuleConfig;
 import io.mycat.route.RouteResultset;
 import io.mycat.route.RouteResultsetNode;
 import io.mycat.route.function.AbstractPartitionAlgorithm;
@@ -28,6 +29,7 @@ import io.mycat.route.parser.util.ParseUtil;
 import io.mycat.route.util.RouterUtil;
 import io.mycat.server.parser.ServerParse;
 import io.mycat.util.StringUtil;
+import org.apache.commons.collections.map.CaseInsensitiveMap;
 
 public class DruidInsertParser extends DefaultDruidParser {
 	@Override
@@ -62,23 +64,44 @@ public class DruidInsertParser extends DefaultDruidParser {
 				parserChildTable(schema, rrs, tableName, insert);
 				return;
 			}
-			
-			String partitionColumn = tc.getPartitionColumn();
-			
+
+			// CHENBO: 满足一条规则即可
+			List<SQLExpr> columns = insert.getColumns();
+			Map<String, Boolean> columnsMap = new CaseInsensitiveMap();
+			for(int i = 0, n = columns.size(); i < n; i++) {
+				String column = StringUtil.removeBackquote(columns.get(i).toString());
+				columnsMap.put(column, Boolean.TRUE);
+			}
+
+//			String partitionColumn = tc.getPartitionColumn();
+			RuleConfig partitionRule = null;
+			String partitionColumn = null;
+			RuleConfig[] rules = tc.getRules();
+			if (rules != null) {
+				for (RuleConfig rule : rules) {
+					String col = rule.getColumn();
+					if (columnsMap.containsKey(col)) {
+						partitionRule = rule;
+						partitionColumn = col;
+						break;
+					}
+				}
+			}
+
 			if(partitionColumn != null) {//分片表
 				//拆分表必须给出column list,否则无法寻找分片字段的值
 				if(insert.getColumns() == null || insert.getColumns().size() == 0) {
 					throw new SQLSyntaxErrorException("partition table, insert must provide ColumnList");
 				}
-				
+
 				//批量insert
 				if(isMultiInsert(insert)) {
 //					String msg = "multi insert not provided" ;
 //					LOGGER.warn(msg);
 //					throw new SQLNonTransientException(msg);
-					parserBatchInsert(schema, rrs, partitionColumn, tableName, insert);
+					parserBatchInsert(schema, rrs, partitionColumn, partitionRule, tableName, insert);
 				} else {
-					parserSingleInsert(schema, rrs, partitionColumn, tableName, insert);
+					parserSingleInsert(schema, rrs, partitionColumn, partitionRule, tableName, insert);
 				}
 				
 			}
@@ -164,14 +187,14 @@ public class DruidInsertParser extends DefaultDruidParser {
 	 * @param insertStmt
 	 * @throws SQLNonTransientException
 	 */
-	private void parserSingleInsert(SchemaConfig schema, RouteResultset rrs, String partitionColumn,
+	private void parserSingleInsert(SchemaConfig schema, RouteResultset rrs, String partitionColumn, RuleConfig partitionRule,
 			String tableName, MySqlInsertStatement insertStmt) throws SQLNonTransientException {
 		boolean isFound = false;
 		for(int i = 0; i < insertStmt.getColumns().size(); i++) {
-			if(partitionColumn.equalsIgnoreCase(StringUtil.removeBackquote(insertStmt.getColumns().get(i).toString()))) {//找到分片字段
+			String column = StringUtil.removeBackquote(insertStmt.getColumns().get(i).toString());
+			if(partitionColumn.equalsIgnoreCase(column)) {//找到分片字段
 				isFound = true;
-				String column = StringUtil.removeBackquote(insertStmt.getColumns().get(i).toString());
-				
+
 				String value = StringUtil.removeBackquote(insertStmt.getValues().getValues().get(i).toString());
 				
 				RouteCalculateUnit routeCalculateUnit = new RouteCalculateUnit();
@@ -210,7 +233,7 @@ public class DruidInsertParser extends DefaultDruidParser {
 	 * @param insertStmt
 	 * @throws SQLNonTransientException
 	 */
-	private void parserBatchInsert(SchemaConfig schema, RouteResultset rrs, String partitionColumn, 
+	private void parserBatchInsert(SchemaConfig schema, RouteResultset rrs, String partitionColumn, RuleConfig partitionRule,
 			String tableName, MySqlInsertStatement insertStmt) throws SQLNonTransientException {
 		//insert into table() values (),(),....
 		if(insertStmt.getValuesList().size() > 1) {
@@ -227,7 +250,7 @@ public class DruidInsertParser extends DefaultDruidParser {
 				Map<Integer,List<ValuesClause>> nodeValuesMap = new HashMap<Integer,List<ValuesClause>>();
 				Map<Integer,Integer> slotsMap = new HashMap<>();
 				TableConfig tableConfig = schema.getTables().get(tableName);
-				AbstractPartitionAlgorithm algorithm = tableConfig.getRule().getRuleAlgorithm();
+				AbstractPartitionAlgorithm algorithm = partitionRule.getRuleAlgorithm();
 				for(ValuesClause valueClause : valueClauseList) {
 					if(valueClause.getValues().size() != columnNum) {
 						String msg = "bad insert sql columnSize != valueSize:"

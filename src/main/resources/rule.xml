@@ -21,8 +21,8 @@
 			<algorithm>func_order_form_id</algorithm>
 		</rule>
 		<rule>
-			<columns>userId</columns>
-			<algorithm>func_order_form_userId</algorithm>
+			<columns>number</columns>
+			<algorithm>func_order_form_number</algorithm>
 		</rule>
 	</tableRule>
 	<tableRule name="rule_order_detail">
@@ -47,24 +47,24 @@
 		<property name="mapFile">/user-partition.txt</property>
 	</function>
 	<function name="func_order_form_id" class="io.mycat.route.function.PartitionBySubstringRange">
-		<property name="fromIndex">-1</property>
-		<property name="length">2</property>
-		<property name="mapFile">/order-partition.txt</property>
+		<property name="fromIndex">0</property>
+		<property name="length">20</property>
+		<property name="mapFile">/order-id-partition.txt</property>
 	</function>
-	<function name="func_order_form_userId" class="io.mycat.route.function.PartitionBySubstringRange">
+	<function name="func_order_form_number" class="io.mycat.route.function.PartitionBySubstringRange">
 		<property name="fromIndex">-1</property>
 		<property name="length">2</property>
-		<property name="mapFile">/order-partition.txt</property>
+		<property name="mapFile">/order-number-partition.txt</property>
 	</function>
 	<function name="func_order_detail_id" class="io.mycat.route.function.PartitionBySubstringRange">
-		<property name="fromIndex">-1</property>
-		<property name="length">2</property>
-		<property name="mapFile">/order-partition.txt</property>
+		<property name="fromIndex">0</property>
+		<property name="length">20</property>
+		<property name="mapFile">/order-detail-id-partition.txt</property>
 	</function>
 	<function name="func_order_detail_orderFormId" class="io.mycat.route.function.PartitionBySubstringRange">
-		<property name="fromIndex">-1</property>
-		<property name="length">2</property>
-		<property name="mapFile">/order-partition.txt</property>
+		<property name="fromIndex">0</property>
+		<property name="length">20</property>
+		<property name="mapFile">/order-id-partition.txt</property>
 	</function>
 	<function name="func_task_id" class="io.mycat.route.function.PartitionBySubstringRange">
 		<property name="fromIndex">-1</property>

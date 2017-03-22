@@ -18,14 +18,7 @@ import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.SQLOrderingSpecification;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.*;
-import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
-import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
-import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
-import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
-import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
-import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
-import com.alibaba.druid.sql.ast.statement.SQLTableSource;
+import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlOrderingExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock.Limit;
@@ -363,12 +356,20 @@ public class DruidSelectParser extends DefaultDruidParser {
 			if(rrs.isDistTable()){
 				SQLTableSource from = mysqlSelectQuery.getFrom();
 
+				// CHENBO:
+				SQLExprTableSource toReplace = null;
+				if (from instanceof SQLJoinTableSource) {
+					toReplace = findTableSource((SQLJoinTableSource) from, rrs.getTableName());
+				} else if (from instanceof SQLExprTableSource) {
+					toReplace = (SQLExprTableSource) from;
+				}
+
 				for (RouteResultsetNode node : rrs.getNodes()) {
-					SQLIdentifierExpr sqlIdentifierExpr = new SQLIdentifierExpr();
-					sqlIdentifierExpr.setParent(from);
-					sqlIdentifierExpr.setName(node.getSubTableName());
-					SQLExprTableSource from2 = new SQLExprTableSource(sqlIdentifierExpr);
-					mysqlSelectQuery.setFrom(from2);
+					if (toReplace != null) {
+						SQLIdentifierExpr expr = new SQLIdentifierExpr(node.getSubTableName());
+						toReplace.setExpr(expr);
+					}
+
 					node.setStatement(stmt.toString());
 	            }
 			}
@@ -376,6 +377,30 @@ public class DruidSelectParser extends DefaultDruidParser {
 			rrs.setCacheAble(isNeedCache(schema, rrs, mysqlSelectQuery, allConditions));
 		}
 		
+	}
+
+	private SQLExprTableSource findTableSource(SQLJoinTableSource join, String tableName) {
+		SQLExprTableSource result = findTableSource(join.getLeft(), tableName);
+		if (result != null) {
+			return result;
+		}
+
+		return findTableSource(join.getRight(), tableName);
+	}
+
+	private SQLExprTableSource findTableSource(SQLTableSource src, String tableName) {
+		if (src instanceof SQLExprTableSource) {
+			String tn = ((SQLExprTableSource) src).getExpr().toString();
+			if (tn.equalsIgnoreCase(tableName)) {
+				return (SQLExprTableSource) src;
+			} else {
+				return null;
+			}
+		} else if (src instanceof SQLJoinTableSource) {
+			return findTableSource((SQLJoinTableSource) src, tableName);
+		}
+
+		return null;
 	}
 	
 	/**

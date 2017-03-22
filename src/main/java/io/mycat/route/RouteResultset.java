@@ -45,6 +45,7 @@ public final class RouteResultset implements Serializable {
     private String statement; // 原始语句
     private final int sqlType;
     private RouteResultsetNode[] nodes; // 路由结果节点
+    private String tableName;
     private Set<String> subTables;
     private SQLStatement sqlStatement; 
     
@@ -371,6 +372,10 @@ public final class RouteResultset implements Serializable {
 		return (sqlMerge != null) ? sqlMerge.getHavingCols() : null;
 	}
 
+	public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
 	public void setSubTables(Set<String> subTables) {
 		this.subTables = subTables;
 	}
@@ -396,6 +401,10 @@ public final class RouteResultset implements Serializable {
 	public void setSqlStatement(SQLStatement sqlStatement) {
 		this.sqlStatement = sqlStatement;
 	}
+
+	public String getTableName() {
+        return this.tableName;
+    }
 
 	public Set<String> getSubTables() {
 		return this.subTables;

@@ -140,7 +140,9 @@ public class PartitionBySubstringRange extends AbstractPartitionAlgorithm implem
             int i = 0;
             for (Range r : ranges) {
                 if (r.startValue != preValue + 1) {
-                    throw new RuntimeException("Missing value between " + preValue + " and " + r.startValue + " in map file: " + mapFile);
+                    throw new RuntimeException("The end value " + preValue + " in line " + i
+                            + " should be 1 smaller than the start value " + r.startValue + " in line " + (i + 1)
+                            + " in map file: " + mapFile);
                 }
 
                 preValue = r.endValue;
