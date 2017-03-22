@@ -1128,12 +1128,14 @@ public class RouterUtil {
 			Map<String, Set<ColumnRoutePair>> columnsMap = entry.getValue();
 
 			// CHENBO: 满足一条规则即可
+			RuleConfig partionRule = null;
 			String partionCol = null;
 			RuleConfig[] rules = tableConfig.getRules();
 			if (rules != null) {
 				for (RuleConfig rule : rules) {
 					String col = rule.getColumn();
 					if (columnsMap.get(col) != null) {
+						partionRule = rule;
 						partionCol = col;
 					}
 				}
@@ -1144,7 +1146,7 @@ public class RouterUtil {
 				tablesRouteSet.addAll(tableConfig.getDistTables());
 			} else {
 				for(ColumnRoutePair pair : partitionValue) {
-					AbstractPartitionAlgorithm algorithm = tableConfig.getRule().getRuleAlgorithm();
+					AbstractPartitionAlgorithm algorithm = partionRule.getRuleAlgorithm();
 					if(pair.colValue != null) {
 						Integer tableIndex = algorithm.calculate(pair.colValue);
 						if(tableIndex == null) {
@@ -1279,12 +1281,14 @@ public class RouterUtil {
 				}
 
 				// CHENBO: 满足一条规则即可
+				RuleConfig partionRule = null;
 				String partionCol = null;
                 RuleConfig[] rules = tableConfig.getRules();
                 if (rules != null) {
                 	for (RuleConfig rule : rules) {
                 		String col = rule.getColumn();
 						if (columnsMap.get(col) != null) {
+							partionRule = rule;
 							partionCol = col;
 						}
 					}
@@ -1299,7 +1303,7 @@ public class RouterUtil {
 						tablesRouteMap.get(tableName).addAll(tableConfig.getDataNodes());
 					} else {
 						for(ColumnRoutePair pair : partitionValue) {
-							AbstractPartitionAlgorithm algorithm = tableConfig.getRule().getRuleAlgorithm();
+							AbstractPartitionAlgorithm algorithm = partionRule.getRuleAlgorithm();
 							if(pair.colValue != null) {
 								Integer nodeIndex = algorithm.calculate(pair.colValue);
 								if(nodeIndex == null) {
