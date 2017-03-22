@@ -53,8 +53,15 @@ public class HintSQLHandler implements HintHandler {
 		for (int i = 0; i < newRrsNodes.length; i++) {
 			newRrsNodes[i] = new RouteResultsetNode(oldRsNodes[i].getName(),
 					oldRsNodes[i].getSqlType(), realSQL);
+
+			// CHENBO:
+			if (oldRsNodes[i].isDisctTable()) {
+			    newRrsNodes[i].setSubTableName(oldRsNodes[i].getSubTableName());
+            }
+
             newRrsNodes[i].setSlot(oldRsNodes[i].getSlot());
 		}
+
 		rrs.setNodes(newRrsNodes);
 
 		// 判断是否为调用存储过程的SQL语句，这里不能用SQL解析器来解析判断是否为CALL语句

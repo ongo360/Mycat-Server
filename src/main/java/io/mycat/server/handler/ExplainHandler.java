@@ -113,8 +113,13 @@ public class ExplainHandler {
 	}
 
 	private static RowDataPacket getRow(RouteResultsetNode node, String charset) {
+		// CHENBO:
 		RowDataPacket row = new RowDataPacket(FIELD_COUNT);
-		row.add(StringUtil.encode(node.getName(), charset));
+		if (node.isDisctTable()) {
+			row.add(StringUtil.encode(node.getName() + "." + node.getSubTableName(), charset));
+		} else {
+			row.add(StringUtil.encode(node.getName(), charset));
+		}
 		row.add(StringUtil.encode(node.getStatement().replaceAll("[\\t\\n\\r]", " "), charset));
 		return row;
 	}

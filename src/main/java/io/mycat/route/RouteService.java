@@ -28,6 +28,7 @@ import java.sql.SQLSyntaxErrorException;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.mycat.route.impl.AbstractRouteStrategy;
 import org.slf4j.Logger; import org.slf4j.LoggerFactory;
 
 import io.mycat.cache.CachePool;
@@ -118,7 +119,12 @@ public class RouteService {
                     	} else {                    		
                     		rrs = hintHandler.route(sysconf, schema, sqlType, realSQL, charset, sc, tableId2DataNodeCache, hintSql,sqlType,hintMap);
                     	}
- 
+
+                    	// CHENBO: 分表时需要重新改写一下realSQL
+                    	if (rrs.isDistTable()) {
+							((AbstractRouteStrategy) RouteStrategyFactory.getRouteStrategy())
+									.routeNormalSqlWithAST(schema, realSQL, rrs, charset, tableId2DataNodeCache);
+						}
                     }else{
                         LOGGER.warn("TODO , support hint sql type : " + hintType);
                     }
