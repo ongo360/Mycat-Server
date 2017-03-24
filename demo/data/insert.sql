@@ -21,3 +21,23 @@ values
 ('User07', 'User07', '07'),
 ('User08', 'User08', '08'),
 ('User09', 'User09', '09');
+
+insert into OrderForm
+(id, userId, number, amount, gmtCreated)
+values
+('0001XXX02', 'User02', '2016XXX0001XXX02', 1.98, '2016-1-22');
+
+insert into OrderForm
+(id, userId, number, amount, gmtCreated)
+values
+('0002XXX09', 'User09', '2016XXX0002XXX09', 3.50, '2016-2-1');
+
+insert into OrderForm
+(id, userId, number, amount, gmtCreated)
+values
+('1001XXX02', 'User02', '2017XXX1001XXX02', 19.20, '2017-5-4');
+
+insert into OrderForm
+(id, userId, number, amount, gmtCreated)
+values
+('1002XXX09', 'User09', '2017XXX1002XXX09', 99.80, '2017-6-6');
