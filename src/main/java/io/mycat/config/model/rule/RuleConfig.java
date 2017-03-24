@@ -35,6 +35,7 @@ public class RuleConfig implements Serializable {
 	private final String column;
 	private final String functionName;
 	private AbstractPartitionAlgorithm ruleAlgorithm;
+	private AbstractPartitionAlgorithm ruleAlgorithmForTable;
 
 	public RuleConfig(String column, String functionName) {
 		if (functionName == null) {
@@ -60,6 +61,13 @@ public class RuleConfig implements Serializable {
 	}
 
 
+	public AbstractPartitionAlgorithm getRuleAlgorithmForTable() {
+		return ruleAlgorithmForTable;
+	}
+
+	public void setRuleAlgorithmForTable(AbstractPartitionAlgorithm ruleAlgorithmForTable) {
+		this.ruleAlgorithmForTable = ruleAlgorithmForTable;
+	}
 
 	/**
 	 * @return unmodifiable, upper-case

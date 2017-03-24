@@ -146,13 +146,32 @@ public class XMLRuleLoader {
 				for (int j = 0; j < length; j++) {
 					RuleConfig rule = loadRule((Element) ruleNodes.item(j));
 					String funName = rule.getFunctionName();
-					//判断function是否存在，获取function
-					AbstractPartitionAlgorithm func = functions.get(funName);
-					if (func == null) {
-						throw new ConfigException("can't find function of name :"
-								+ funName);
+
+					// CHENBO: 增加对同时分库分表的支持
+					String[] names = funName.split("\\s*,\\s*");
+					if (names.length < 1) {
+						throw new ConfigException("no function for table rule " + name);
+					} else if (names.length > 2) {
+						throw new ConfigException("too many functions for table rule " + name);
 					}
+
+					//判断function是否存在，获取function
+					AbstractPartitionAlgorithm func = functions.get(names[0]);
+					if (func == null) {
+						throw new ConfigException("can't find function " + names[0] + " for table rule " + name);
+					}
+
 					rule.setRuleAlgorithm(func);
+
+					if (names.length > 1) {
+						AbstractPartitionAlgorithm funcForTable = functions.get(names[1]);
+						if (funcForTable == null) {
+							throw new ConfigException("can't find function " + names[1] + " for table rule " + name);
+						}
+
+						rule.setRuleAlgorithmForTable(funcForTable);
+					}
+
 					rules[j] = rule;
 				}
 

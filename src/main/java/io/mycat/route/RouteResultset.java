@@ -24,9 +24,6 @@
 package io.mycat.route;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
-
-import io.mycat.MycatServer;
-import io.mycat.config.MycatConfig;
 import io.mycat.config.model.SchemaConfig;
 import io.mycat.route.parser.util.PageSQLUtil;
 import io.mycat.sqlengine.mpp.HavingCols;
@@ -36,7 +33,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author mycat
@@ -46,8 +42,7 @@ public final class RouteResultset implements Serializable {
     private final int sqlType;
     private RouteResultsetNode[] nodes; // 路由结果节点
     private String tableName;
-    private Set<String> subTables;
-    private SQLStatement sqlStatement; 
+    private SQLStatement sqlStatement;
     
 
     private int limitStart;
@@ -376,10 +371,6 @@ public final class RouteResultset implements Serializable {
         this.tableName = tableName;
     }
 
-	public void setSubTables(Set<String> subTables) {
-		this.subTables = subTables;
-	}
-
 	public void setHavings(HavingCols havings) {
 		if (havings != null) {
 			createSQLMergeIfNull().setHavingCols(havings);
@@ -406,12 +397,8 @@ public final class RouteResultset implements Serializable {
         return this.tableName;
     }
 
-	public Set<String> getSubTables() {
-		return this.subTables;
-	}
-	
 	public boolean isDistTable(){
-		if(this.getSubTables()!=null && !this.getSubTables().isEmpty() ){
+		if(this.tableName!=null && !this.tableName.isEmpty() ){
 			return true;
 		}
 		return false;

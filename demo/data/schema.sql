@@ -1,8 +1,7 @@
-create database if not exists sk_dev default character set utf8 collate utf8_general_ci;
+drop database if exists sk_dev;
+create database sk_dev default character set utf8 collate utf8_general_ci;
 
 use sk_dev;
-
-drop function if exists getTaskZoneCode;
 
 drop table if exists User;
 create table User (
@@ -12,9 +11,9 @@ create table User (
     primary key(id)
 );
 
-drop table if exists OrderForm;
-create table OrderForm (
-    id int unsigned auto_increment,
+drop table if exists OrderForm_Current;
+create table OrderForm_Current (
+    id varchar(40) not null,
     userId varchar(40) not null,
     number varchar(20) not null,
     amount decimal(20,2) not null,
@@ -22,11 +21,11 @@ create table OrderForm (
     primary key(id)
 );
 
-create index IX_OrderForm_userId_gmtCreated on OrderForm(userId, gmtCreated);
+create index IX_OrderForm_Current_userId_gmtCreated on OrderForm_Current(userId, gmtCreated);
 
 drop table if exists OrderForm_Old;
 create table OrderForm_Old (
-    id int unsigned auto_increment,
+    id varchar(40) not null,
     userId varchar(40) not null,
     number varchar(20) not null,
     amount decimal(20,2) not null,
@@ -36,9 +35,9 @@ create table OrderForm_Old (
 
 create index IX_OrderForm_Old_userId_gmtCreated on OrderForm_Old(userId, gmtCreated, id);
 
-drop table if exists OrderDetail;
-create table OrderDetail (
-    id int unsigned auto_increment,
+drop table if exists OrderDetail_Current;
+create table OrderDetail_Current (
+    id varchar(40) not null,
     orderFormId varchar(40) not null,
     itemNo varchar(20) not null,
     itemName varchar(100) not null,
@@ -48,11 +47,11 @@ create table OrderDetail (
     primary key(id)
 );
 
-create index IX_OrderDetail_orderFormId on OrderDetail(orderFormId);
+create index IX_OrderDetail_Current_orderFormId on OrderDetail_Current(orderFormId);
 
 drop table if exists OrderDetail_Old;
 create table OrderDetail_Old (
-    id int unsigned auto_increment,
+    id varchar(40) not null,
     orderFormId varchar(40) not null,
     itemNo varchar(20) not null,
     itemName varchar(100) not null,
