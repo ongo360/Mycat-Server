@@ -33,10 +33,16 @@ import io.mycat.server.parser.ServerParse;
 public class HintSQLHandler implements HintHandler {
 	
 	private RouteStrategy routeStrategy;
+	private Boolean isRouteToMaster = null;
 	
 	public HintSQLHandler() {
-		this.routeStrategy = RouteStrategyFactory.getRouteStrategy();
+		this(null);
 	}
+
+    public HintSQLHandler(Boolean isRouteToMaster) {
+	    this.isRouteToMaster = isRouteToMaster;
+        this.routeStrategy = RouteStrategyFactory.getRouteStrategy();
+    }
 
 	@Override
 	public RouteResultset route(SystemConfig sysConfig, SchemaConfig schema,
@@ -80,6 +86,10 @@ public class HintSQLHandler implements HintHandler {
             }
 
 		}
+
+		if (isRouteToMaster != null) {
+		    rrs.setRunOnSlave(!isRouteToMaster);
+        }
 
 		return rrs;
 	}
