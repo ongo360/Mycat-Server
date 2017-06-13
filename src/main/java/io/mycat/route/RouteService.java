@@ -143,6 +143,7 @@ public class RouteService {
 		if (rrs != null && sqlType == ServerParse.SELECT && rrs.isCacheAble()) {
 			sqlRouteCache.putIfAbsent(cacheKey, rrs);
 		}
+
 		return rrs;
 	}
 

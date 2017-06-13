@@ -1144,6 +1144,11 @@ public class RouterUtil {
 		int count = 0;
 
 		for(Map.Entry<String, Map<String, Set<ColumnRoutePair>>> entry : tablesAndConditions.entrySet()) {
+			String tblName = entry.getKey();
+			if (!tblName.equalsIgnoreCase(tableName)) {
+				continue;
+			}
+
 			Map<String, Set<ColumnRoutePair>> columnsMap = entry.getValue();
 
 			// CHENBO: 满足一条规则即可
@@ -1160,7 +1165,7 @@ public class RouterUtil {
 					}
 				}
 			}
-			
+
 			Set<ColumnRoutePair> partitionValue = columnsMap.get(partionCol);
 			if(partitionValue == null || partitionValue.size() == 0) {
 //				tablesRouteSet.addAll(tableConfig.getDistTables());

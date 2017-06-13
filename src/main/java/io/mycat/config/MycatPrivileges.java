@@ -27,7 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger; 
+import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
@@ -228,7 +229,7 @@ public class MycatPrivileges implements FrontendPrivileges {
 					int index = -1;
 					
 					//TODO 此处待优化，寻找更优SQL 解析器
-					SQLStatementParser parser = new MycatStatementParser(sql);			
+					SQLStatementParser parser = new MySqlStatementParser(sql);
 					SQLStatement stmt = parser.parseStatement();
 					
 					if (stmt instanceof MySqlReplaceStatement || stmt instanceof SQLInsertStatement ) {		

@@ -50,11 +50,11 @@ public class DQLRouteTest {
 		SchemaConfig schema = schemaMap.get("mysqldb");
 		RouteResultset rrs = new RouteResultset(stmt, 7);
 		SQLStatementParser parser = null;
-		if (schema.isNeedSupportMultiDBType()) {
-			parser = new MycatStatementParser(stmt);
-		} else {
+//		if (schema.isNeedSupportMultiDBType()) {
+//			parser = new MySqlStatementParser(stmt);
+//		} else {
 			parser = new MySqlStatementParser(stmt);
-		}
+//		}
 		SQLStatement statement;
 		MycatSchemaStatVisitor visitor = null;
 

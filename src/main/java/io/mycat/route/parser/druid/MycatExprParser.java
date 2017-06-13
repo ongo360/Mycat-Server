@@ -24,55 +24,5 @@ public class MycatExprParser extends MySqlExprParser
         lexer.nextToken();
         super.aggregateFunctions = max_agg_functions;
     }
-    @Override
-    public SQLSelectItem parseSelectItem()
-    {
-        parseTop();
-        return super.parseSelectItem();
-    }
-    public void parseTop()
-    {
-        if (lexer.token() == Token.TOP)
-        {
-            lexer.nextToken();
 
-            boolean paren = false;
-            if (lexer.token() == Token.LPAREN)
-            {
-                paren = true;
-                lexer.nextToken();
-            }
-
-            if (paren)
-            {
-                accept(Token.RPAREN);
-            }
-
-            if (lexer.token() == Token.LITERAL_INT)
-            {
-                lexer.mark();
-                lexer.nextToken();
-            }
-            if (lexer.token() == Token.IDENTIFIER)
-            {
-                lexer.nextToken();
-
-            }
-            if (lexer.token() == Token.EQ||lexer.token() == Token.DOT)
-            {
-                lexer.nextToken();
-            } else  if(lexer.token() != Token.STAR)
-            {
-                lexer.reset();
-            }
-            if (lexer.token() == Token.PERCENT)
-            {
-                lexer.nextToken();
-            }
-
-
-        }
-
-
-    }
 }

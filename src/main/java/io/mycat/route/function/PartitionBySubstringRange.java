@@ -180,7 +180,14 @@ public class PartitionBySubstringRange extends AbstractPartitionAlgorithm implem
         }
 
         String substr = StringUtils.substring(columnValue, from, end);
-        int value = Integer.parseInt(substr, radix);
+        int value;
+        try {
+            value = Integer.parseInt(substr, radix);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("The substring(" + from + ", " + end + ") of '"
+                    + columnValue + "' cannot be transformed to number by radix of " + radix);
+        }
+
         int index = Arrays.binarySearch(endValues, value);
         if (index == endValues.length) {
             throw new RuntimeException("Too large column value for PartitionBySubstringRange: "

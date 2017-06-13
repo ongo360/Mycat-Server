@@ -147,9 +147,14 @@ public class DruidParserFactory
                         key = key.substring(pos + 1);
                     }
 
-                    if (key.equals(value))
-                    {
-                        tables.add(key.toUpperCase());
+// CHENBO: 没搞懂原作者想干嘛
+//                    if (key.equals(value))
+//                    {
+//                        tables.add(key.toUpperCase());
+//                    }
+
+                    if (value != null) {
+                        tables.add(value.toUpperCase());
                     }
                 }
             }
