@@ -1194,10 +1194,13 @@ public class RouterUtil {
 							if (tableSet == null) {
 								tableSet = new HashSet<String>();
 								tablesRouteSet.put(nodeName, tableSet);
-							}
 
-							tableSet.add(subTable);
-							count++;
+								tableSet.add(subTable);
+								count++;
+							} else if (!tableSet.contains(subTable)) {
+								tableSet.add(subTable);
+								count++;
+							}
 
 							if(algorithmForTable instanceof SlotFunction){
 								rrs.getDataNodeSlotMap().put(subTable,((SlotFunction) algorithmForTable).slotValue());
@@ -1241,10 +1244,13 @@ public class RouterUtil {
 									if (tableSet == null) {
 										tableSet = new HashSet<String>();
 										tablesRouteSet.put(nodeName, tableSet);
-									}
 
-									tableSet.add(subTable);
-									count++;
+										tableSet.add(subTable);
+										count++;
+									} else if (!tableSet.contains(subTable)) {
+										tableSet.add(subTable);
+										count++;
+									}
 
 									if (algorithmForTable instanceof SlotFunction) {
 										rrs.getDataNodeSlotMap().put(subTable, ((SlotFunction) algorithmForTable).slotValue());
@@ -1260,6 +1266,8 @@ public class RouterUtil {
 		if (count == 0) {
 			throw new IllegalArgumentException("route rule for table "
 					+ tableName + " is required: " + orgSql);
+		} else if (count > 1) {
+			throw new IllegalArgumentException("cannot join multiple tables those are partitioned by subtable: " + orgSql);
 		}
 
 		RouteResultsetNode[] nodes = new RouteResultsetNode[count];

@@ -156,7 +156,7 @@ public class ExplainHandler {
 					.route(system,schema, sqlType, stmt, c.getCharset(), c);
 		} catch (Exception e) {
 			StringBuilder s = new StringBuilder();
-			logger.warn(s.append(c).append(stmt).toString()+" error:"+ e);
+			logger.warn(s.append(c).append(stmt).toString(), e);
 			String msg = e.getMessage();
 			c.writeErrMessage(ErrorCode.ER_PARSE_ERROR, msg == null ? e
 					.getClass().getSimpleName() : msg);

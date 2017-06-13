@@ -349,87 +349,86 @@ public class DruidSelectParser extends DefaultDruidParser {
 					//	ctx.setSql(nativeSql);
 
 				}
-				
-
 			}
-			
-			if(rrs.isDistTable()){
-				SQLTableSource from = mysqlSelectQuery.getFrom();
-
-				// CHENBO:
-				SQLExprTableSource toReplace = findTableSource(from, rrs.getTableName());
-				for (RouteResultsetNode node : rrs.getNodes()) {
-					if (toReplace != null) {
-						SQLIdentifierExpr expr = new SQLIdentifierExpr(node.getSubTableName());
-						toReplace.setExpr(expr);
-					}
-
-					node.setStatement(stmt.toString());
-	            }
-			}
-			
-			rrs.setCacheAble(isNeedCache(schema, rrs, mysqlSelectQuery, allConditions));
 		}
-		
+
+		if(rrs.isDistTable()){
+			// CHENBO:
+			List<SQLExprTableSource> srcs = new ArrayList<>();
+			findTableSources(srcs, sqlSelectQuery, rrs.getTableName());
+
+			for (RouteResultsetNode node : rrs.getNodes()) {
+				for (SQLExprTableSource src : srcs) {
+					SQLIdentifierExpr expr = new SQLIdentifierExpr(node.getSubTableName());
+					src.setExpr(expr);
+				}
+
+				node.setStatement(stmt.toString());
+			}
+		}
+
+		rrs.setCacheAble(isNeedCache(schema, rrs));
 	}
 
-	private SQLExprTableSource findTableSource(SQLSelectQuery slt, String tableName) {
+	private void findTableSources(List<SQLExprTableSource> result, SQLSelectQuery slt, String tableName) {
 		if (slt instanceof SQLSelectQueryBlock) {
-			return findTableSource((SQLSelectQueryBlock) slt, tableName);
+			findTableSources(result, (SQLSelectQueryBlock) slt, tableName);
 		} else if (slt instanceof SQLUnionQuery) {
-			return findTableSource((SQLUnionQuery) slt, tableName);
+			findTableSources(result, (SQLUnionQuery) slt, tableName);
 		}
-
-		return null;
 	}
 
-	private SQLExprTableSource findTableSource(SQLSelectQueryBlock slt, String tableName) {
-		return findTableSource(slt.getFrom(), tableName);
+	private void findTableSources(List<SQLExprTableSource> result, SQLSelectQueryBlock slt, String tableName) {
+		findTableSources(result, slt.getFrom(), tableName);
+		findTableSources(result, slt.getWhere(), tableName);
 	}
 
-	private SQLExprTableSource findTableSource(SQLUnionQuery union, String tableName) {
-		SQLExprTableSource src = findTableSource(union.getLeft(), tableName);
-		if (src != null) {
-			return src;
+	private void findTableSources(List<SQLExprTableSource> result, SQLExpr expr, String tableName) {
+		if (expr instanceof SQLQueryExpr) {
+			findTableSources(result, ((SQLQueryExpr) expr).getSubQuery().getQuery(), tableName);
+		} else if (expr instanceof SQLInSubQueryExpr) {
+			findTableSources(result, ((SQLInSubQueryExpr) expr).getSubQuery().getQuery(), tableName);
+		}  else if (expr instanceof SQLExistsExpr) {
+			findTableSources(result, ((SQLExistsExpr) expr).getSubQuery().getQuery(), tableName);
+		} else if (expr instanceof SQLNotExpr) {
+			findTableSources(result, ((SQLNotExpr) expr).getExpr(), tableName);
+		} else if (expr instanceof SQLBinaryOpExpr) {
+			findTableSources(result, ((SQLBinaryOpExpr) expr).getLeft(), tableName);
+			findTableSources(result, ((SQLBinaryOpExpr) expr).getRight(), tableName);
 		}
-
-		return findTableSource(union.getRight(), tableName);
 	}
 
-	private SQLExprTableSource findTableSource(SQLJoinTableSource join, String tableName) {
-		SQLExprTableSource result = findTableSource(join.getLeft(), tableName);
-		if (result != null) {
-			return result;
-		}
-
-		return findTableSource(join.getRight(), tableName);
+	private void findTableSources(List<SQLExprTableSource> result, SQLUnionQuery union, String tableName) {
+		findTableSources(result, union.getLeft(), tableName);
+		findTableSources(result, union.getRight(), tableName);
 	}
 
-	private SQLExprTableSource findTableSource(SQLSubqueryTableSource subquery, String tableName) {
-		return findTableSource(subquery.getSelect().getQuery(), tableName);
+	private void findTableSources(List<SQLExprTableSource> result, SQLJoinTableSource join, String tableName) {
+		findTableSources(result, join.getLeft(), tableName);
+		findTableSources(result, join.getRight(), tableName);
 	}
 
-	private SQLExprTableSource findTableSource(SQLUnionQueryTableSource union, String tableName) {
-		return findTableSource(union.getUnion(), tableName);
+	private void findTableSources(List<SQLExprTableSource> result, SQLSubqueryTableSource subquery, String tableName) {
+		findTableSources(result, subquery.getSelect().getQuery(), tableName);
 	}
 
-	private SQLExprTableSource findTableSource(SQLTableSource src, String tableName) {
+	private void findTableSources(List<SQLExprTableSource> result, SQLUnionQueryTableSource union, String tableName) {
+		findTableSources(result, union.getUnion(), tableName);
+	}
+
+	private void findTableSources(List<SQLExprTableSource> result, SQLTableSource src, String tableName) {
 		if (src instanceof SQLExprTableSource) {
 			String tn = ((SQLExprTableSource) src).getExpr().toString();
 			if (tn.equalsIgnoreCase(tableName)) {
-				return (SQLExprTableSource) src;
-			} else {
-				return null;
+				result.add((SQLExprTableSource) src);
 			}
 		} else if (src instanceof SQLJoinTableSource) {
-			return findTableSource((SQLJoinTableSource) src, tableName);
+			findTableSources(result, (SQLJoinTableSource) src, tableName);
 		} else if (src instanceof SQLSubqueryTableSource) {
-			return findTableSource((SQLSubqueryTableSource) src, tableName);
+			findTableSources(result, (SQLSubqueryTableSource) src, tableName);
 		} else if (src instanceof SQLUnionQueryTableSource) {
-			return findTableSource((SQLUnionQueryTableSource) src, tableName);
+			findTableSources(result, (SQLUnionQueryTableSource) src, tableName);
 		}
-
-		return null;
 	}
 	
 	/**
@@ -538,8 +537,7 @@ public class DruidSelectParser extends DefaultDruidParser {
 		} 
 	}
 	
-	private boolean isNeedCache(SchemaConfig schema, RouteResultset rrs, 
-			MySqlSelectQueryBlock mysqlSelectQuery, Map<String, Map<String, Set<ColumnRoutePair>>> allConditions) {
+	private boolean isNeedCache(SchemaConfig schema, RouteResultset rrs) {
 		if(ctx.getTables() == null || ctx.getTables().size() == 0 ) {
 			return false;
 		}
