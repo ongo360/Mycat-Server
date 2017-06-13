@@ -33,6 +33,10 @@
 			</includes>
 		</fileSet>
 		<fileSet>
+			<directory>target/classes/com/alibaba</directory>
+			<outputDirectory>mycat/lib/classes/com/alibaba</outputDirectory>
+		</fileSet>
+		<fileSet>
 			<directory>src/main/resources</directory>
 			<outputDirectory>mycat/conf</outputDirectory>
 			<excludes>
