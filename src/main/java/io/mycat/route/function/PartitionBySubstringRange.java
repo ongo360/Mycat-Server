@@ -189,13 +189,14 @@ public class PartitionBySubstringRange extends AbstractPartitionAlgorithm implem
         }
 
         int index = Arrays.binarySearch(endValues, value);
-        if (index == endValues.length) {
-            throw new RuntimeException("Too large column value for PartitionBySubstringRange: "
-                    + columnValue + ", value=" + value + " (max=" + endValues[endValues.length - 1] + ")");
-        }
 
         if (index < 0) {
             index = - index - 1;
+        }
+
+        if (index == endValues.length) {
+            throw new RuntimeException("Too large column value for PartitionBySubstringRange: "
+                    + columnValue + ", value=" + value + " (max=" + endValues[endValues.length - 1] + ")");
         }
 
         return nodeIndexes[index];

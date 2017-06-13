@@ -2,15 +2,12 @@ package io.mycat.route.impl;
 
 import java.sql.SQLNonTransientException;
 import java.sql.SQLSyntaxErrorException;
-import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.expr.SQLIntegerExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlInsertStatement;
+import io.mycat.config.model.TableConfig;
 import io.mycat.config.model.rule.RuleConfig;
-import io.mycat.route.function.AbstractPartitionAlgorithm;
 import io.mycat.route.function.SlotFunction;
 import io.mycat.route.parser.util.ParseUtil;
 import org.slf4j.Logger; import org.slf4j.LoggerFactory;
@@ -36,7 +33,6 @@ import io.mycat.route.parser.druid.DruidParser;
 import io.mycat.route.parser.druid.DruidParserFactory;
 import io.mycat.route.parser.druid.DruidShardingParseInfo;
 import io.mycat.route.parser.druid.MycatSchemaStatVisitor;
-import io.mycat.route.parser.druid.MycatStatementParser;
 import io.mycat.route.parser.druid.RouteCalculateUnit;
 import io.mycat.route.util.RouterUtil;
 import io.mycat.server.parser.ServerParse;
@@ -86,17 +82,18 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		/**
 		 * DruidParser 解析过程中已完成了路由的直接返回
 		 */
+		DruidShardingParseInfo ctx=  druidParser.getCtx();
 		if ( rrs.isFinishedRoute() ) {
-			return rrs;
+			return checkAcrossNodeQueries(schema, stmt, ctx, rrs);
 		}
 		
 		/**
 		 * 没有from的select语句或其他
 		 */
-        DruidShardingParseInfo ctx=  druidParser.getCtx() ;
         if((ctx.getTables() == null || ctx.getTables().size() == 0)&&(ctx.getTableAliasMap()==null||ctx.getTableAliasMap().isEmpty()))
         {
-		    return RouterUtil.routeToSingleNode(rrs, schema.getRandomDataNode(), druidParser.getCtx().getSql());
+		    rrs =  RouterUtil.routeToSingleNode(rrs, schema.getRandomDataNode(), druidParser.getCtx().getSql());
+			return checkAcrossNodeQueries(schema, stmt, ctx, rrs);
 		}
 
 		if(druidParser.getCtx().getRouteCalculateUnits().size() == 0) {
@@ -134,15 +131,33 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 		 *目前分表 1.6 开始支持 幵丏 dataNode 在分表条件下只能配置一个，分表条件下不支持join。
 		 */
 		if(rrs.isDistTable()){
-			return this.routeDisTable(statement,rrs);
+			rrs = routeDisTable(statement,rrs);
+			return checkAcrossNodeQueries(schema, stmt, ctx, rrs);
 		}
-		
+
+		return checkAcrossNodeQueries(schema, stmt, ctx, rrs);
+	}
+
+	private RouteResultset checkAcrossNodeQueries(SchemaConfig schema,
+												  String stmt,
+												  DruidShardingParseInfo ctx,
+												  RouteResultset rrs) throws SQLNonTransientException {
+
+		RouteResultsetNode[] nodes = rrs.getNodes();
+		if (nodes == null || nodes.length == 0) {
+			return rrs;
+		}
+
+		for (String tableName : ctx.getTables()) {
+			TableConfig tableConfig = schema.getTables().get(tableName.toUpperCase());
+			if (tableConfig.isRuleRequired() && nodes.length > 1) {
+				throw new SQLNonTransientException("Across-node queries are forbidden. SQL: " + stmt);
+			}
+		}
+
 		return rrs;
 	}
 
-
-
-	
 	private SQLExprTableSource getDisTable(SQLTableSource tableSource,RouteResultsetNode node) throws SQLSyntaxErrorException{
 		if(node.getSubTableName()==null){
 			String msg = " sub table not exists for " + node.getName() + " on " + tableSource;
