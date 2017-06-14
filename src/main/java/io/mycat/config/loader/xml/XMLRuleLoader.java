@@ -144,7 +144,7 @@ public class XMLRuleLoader {
 				//RuleConfig是保存着rule与function对应关系的对象
 				RuleConfig[] rules = new RuleConfig[length];
 				for (int j = 0; j < length; j++) {
-					RuleConfig rule = loadRule((Element) ruleNodes.item(j));
+					RuleConfig rule = loadRule(name, (Element) ruleNodes.item(j));
 					String funName = rule.getFunctionName();
 
 					// CHENBO: 增加对同时分库分表的支持
@@ -181,19 +181,25 @@ public class XMLRuleLoader {
 		}
 	}
 
-	private RuleConfig loadRule(Element element) throws SQLSyntaxErrorException {
+	private RuleConfig loadRule(String ruleName, Element element) throws SQLSyntaxErrorException {
 		//读取columns
 		Element columnsEle = ConfigUtil.loadElement(element, "columns");
-		String column = columnsEle.getTextContent();
-		String[] columns = SplitUtil.split(column, ',', true);
-		if (columns.length > 1) {
-			throw new ConfigException("table rule coulmns has multi values:"
-					+ columnsEle.getTextContent());
+		String columnsString = columnsEle.getTextContent();
+		String[] columns = SplitUtil.split(columnsString, ',', true);
+		if (columns.length == 0) {
+			throw new IllegalArgumentException("missing columns for rule: " + ruleName);
+		} else if (columns.length > 2) {
+			throw new IllegalArgumentException("too many columns for rule: " + ruleName);
 		}
+
+		for (int i = 0; i < columns.length; i++) {
+			columns[i] = columns[i].toUpperCase();
+		}
+
 		//读取algorithm
 		Element algorithmEle = ConfigUtil.loadElement(element, "algorithm");
 		String algorithm = algorithmEle.getTextContent();
-		return new RuleConfig(column.toUpperCase(), algorithm);
+		return new RuleConfig(columns, algorithm);
 	}
 
 	/**

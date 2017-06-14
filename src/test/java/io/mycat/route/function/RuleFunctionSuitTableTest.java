@@ -23,7 +23,7 @@ public class RuleFunctionSuitTableTest {
 		autoPartition.setMapFile("autopartition-long.txt");
 		autoPartition.init(); // partition = 3
 		Assert.assertEquals(3, autoPartition.getPartitionNum());
-		RuleConfig rule = new RuleConfig("id", "auto-partition-long");
+		RuleConfig rule = new RuleConfig(new String[] { "id" }, "auto-partition-long");
 		rule.setRuleAlgorithm(autoPartition);
 		RuleConfig[] rules = new RuleConfig[] { rule };
 		TableConfig tableConf = new TableConfig("test", "id", true, false, -1, "dn1,dn2",
@@ -54,7 +54,7 @@ public class RuleFunctionSuitTableTest {
 		partition.init(); // partition = 4
 		Assert.assertEquals(4, partition.getPartitionNum());
 		
-		RuleConfig rule = new RuleConfig("col_date", "partition-date");
+		RuleConfig rule = new RuleConfig(new String[] { "col_date" }, "partition-date");
 		rule.setRuleAlgorithm(partition);
 		RuleConfig[] rules = new RuleConfig[] { rule };
 		TableConfig tableConf = new TableConfig("test", "id", true, false, -1, "dn1,dn2,dn3",
@@ -91,7 +91,7 @@ public class RuleFunctionSuitTableTest {
 		partition.setCount(3); // partition = 3;
 		Assert.assertEquals(3, partition.getPartitionNum());
 		
-		RuleConfig rule = new RuleConfig("id", "partition-hash-mod");
+		RuleConfig rule = new RuleConfig(new String[] { "id" }, "partition-hash-mod");
 		rule.setRuleAlgorithm(partition);
 		RuleConfig[] rules = new RuleConfig[] { rule };
 		TableConfig tableConf = new TableConfig("test", "id", true, false, -1, "dn1,dn2,dn3",
@@ -117,7 +117,7 @@ public class RuleFunctionSuitTableTest {
 		partition.init();
 		
 		Assert.assertEquals(20, partition.getPartitionNum()); // partition = 20
-		RuleConfig rule = new RuleConfig("id", "partition-range-mod");
+		RuleConfig rule = new RuleConfig(new String[] { "id" }, "partition-range-mod");
 		rule.setRuleAlgorithm(partition);
 		RuleConfig[] rules = new RuleConfig[] { rule };
 		TableConfig tableConf = new TableConfig("test", "id", true, false, -1, "dn$1-10",

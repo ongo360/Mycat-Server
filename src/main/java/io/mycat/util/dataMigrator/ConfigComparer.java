@@ -180,7 +180,7 @@ public class ConfigComparer {
 			if(isNeedMigrate(oldDN,newDN)){
 				checkRuleConfig(oldTable.getRule(), newTable.getRule(),schemaName,tableName);
 				RuleConfig newRC=newTable.getRule();
-				TableMigrateInfo tmi = new TableMigrateInfo(schemaName, tableName, oldDN, newDN, newRC.getRuleAlgorithm(), newRC.getColumn());
+				TableMigrateInfo tmi = new TableMigrateInfo(schemaName, tableName, oldDN, newDN, newRC.getRuleAlgorithm(), newRC.getColumns()[0]);
 				migratorTables.add(tmi);
 			}else{
 				String message = schemaName+":"+tableName+" is ignore,no need to migrate!";
@@ -228,7 +228,7 @@ public class ConfigComparer {
 	
 	//校验前后路由规则是否一致
 	private void checkRuleConfig(RuleConfig oldRC,RuleConfig newRC,String schemaName,String tableName){
-		if(!oldRC.getColumn().equalsIgnoreCase(newRC.getColumn())){
+		if(!oldRC.getColumns()[0].equalsIgnoreCase(newRC.getColumns()[0])){
 			throw new ConfigException(schemaName+":"+tableName+" old & new partition column is not same!");
 		}
 		AbstractPartitionAlgorithm oldAlg = oldRC.getRuleAlgorithm();

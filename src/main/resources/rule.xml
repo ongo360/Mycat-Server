@@ -24,6 +24,10 @@
 			<columns>number</columns>
 			<algorithm>func_order_form_number_node,func_order_form_number_table</algorithm>
 		</rule>
+		<rule>
+			<columns>userId,gmtCreated</columns>
+			<algorithm>func_order_form_number_node,func_order_form_number_table</algorithm>
+		</rule>
 	</tableRule>
 	<tableRule name="rule_order_detail">
 		<rule>

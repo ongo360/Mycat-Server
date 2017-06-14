@@ -110,7 +110,7 @@ public class TableConfig {
 		
 		this.rule = rule;
 		this.rules = rules;
-		this.partitionColumn = (rule == null) ? null : rule.getColumn();
+		this.partitionColumn = (rule == null) ? null : rule.getColumns()[0];
 		partionKeyIsPrimaryKey=(partitionColumn==null)?primaryKey==null:partitionColumn.equals(primaryKey);
 		this.ruleRequired = ruleRequired;
 		this.childTable = isChildTable;

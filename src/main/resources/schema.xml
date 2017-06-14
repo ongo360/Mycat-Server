@@ -4,24 +4,24 @@
 
 	<schema name="sk_dev" dataNode="dn1">
 		<table name="TUser" primaryKey="id" dataNode="dn1,dn2" rule="rule_user" ruleRequired="true" />
-		<table name="OrderForm" primaryKey="id" dataNode="dn1,dn2" subTables="OrderForm_Current,OrderForm_Old" rule="rule_order_form" ruleRequired="true" />
-		<table name="OrderDetail" primaryKey="id" dataNode="dn1,dn2" subTables="OrderDetail_Current,OrderDetail_Old" rule="rule_order_detail" ruleRequired="true" />
-		<table name="Task" primaryKey="id" dataNode="dn1,dn2" rule="rule_task" />
+		<table name="TOrderForm" primaryKey="id" dataNode="dn1,dn2" subTables="TOrderForm_Current,TOrderForm_Old" rule="rule_order_form" ruleRequired="true" />
+		<table name="TOrderDetail" primaryKey="id" dataNode="dn1,dn2" subTables="TOrderDetail_Current,TOrderDetail_Old" rule="rule_order_detail" ruleRequired="true" />
+		<table name="TTask" primaryKey="id" dataNode="dn1,dn2" rule="rule_task" />
 	</schema>
 
-	<dataNode name="dn1" dataHost="dbhost1" database="test000" />
-	<dataNode name="dn2" dataHost="dbhost2" database="test000" />
+	<dataNode name="dn1" dataHost="dbhost1" database="sk" />
+	<dataNode name="dn2" dataHost="dbhost2" database="sk" />
 
 	<dataHost name="dbhost1" maxCon="1000" minCon="10" balance="0"
-			  writeType="0" dbType="sqlserver" dbDriver="jdbc">
+			  writeType="0" dbType="mysql" dbDriver="native">
 		<heartbeat>select 1</heartbeat>
-		<writeHost host="m1" url="jdbc:sqlserver://rm-uf69l4g20f7a7p35eo.sqlserver.rds.aliyuncs.com:3433" user="jacky" password="jacky128="/>
+		<writeHost host="m1" url="127.0.0.1:3306" user="root" password="rootpass"/>
 	</dataHost>
 
 	<dataHost name="dbhost2" maxCon="1000" minCon="10" balance="0"
-			  writeType="0" dbType="sqlserver" dbDriver="jdbc">
+			  writeType="0" dbType="mysql" dbDriver="native">
 		<heartbeat>select 1</heartbeat>
-		<writeHost host="m1" url="jdbc:sqlserver://rm-uf69l4g20f7a7p35eo.sqlserver.rds.aliyuncs.com:3433" user="jacky" password="jacky128="/>
+		<writeHost host="m1" url="127.0.0.1:3306" user="root" password="rootpass"/>
 	</dataHost>
 
 </mycat:schema>

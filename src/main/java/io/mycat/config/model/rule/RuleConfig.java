@@ -32,20 +32,24 @@ import java.io.Serializable;
  * @author mycat
  */
 public class RuleConfig implements Serializable {
-	private final String column;
+	private final String[] columns;
 	private final String functionName;
 	private AbstractPartitionAlgorithm ruleAlgorithm;
 	private AbstractPartitionAlgorithm ruleAlgorithmForTable;
 
-	public RuleConfig(String column, String functionName) {
+	public RuleConfig(String[] columns, String functionName) {
 		if (functionName == null) {
 			throw new IllegalArgumentException("functionName is null");
 		}
 		this.functionName = functionName;
-		if (column == null || column.length() <= 0) {
+
+		if (columns == null || columns.length <= 0) {
 			throw new IllegalArgumentException("no rule column is found");
+		} else if (columns.length > 2) {
+			throw new IllegalArgumentException("too many colums");
 		}
-		this.column = column;
+
+		this.columns = columns;
 	}
 
 	
@@ -72,8 +76,8 @@ public class RuleConfig implements Serializable {
 	/**
 	 * @return unmodifiable, upper-case
 	 */
-	public String getColumn() {
-		return column;
+	public String[] getColumns() {
+		return columns;
 	}
 
 	public String getFunctionName() {

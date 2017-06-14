@@ -883,7 +883,7 @@ public class RouterUtil {
 	public static Set<String> ruleCalculate(TableConfig tc,
 			Set<ColumnRoutePair> colRoutePairSet,Map<String,Integer>   dataNodeSlotMap)  {
 		Set<String> routeNodeSet = new LinkedHashSet<String>();
-		String col = tc.getRule().getColumn();
+		String col = tc.getRule().getColumns()[0];
 		RuleConfig rule = tc.getRule();
 		AbstractPartitionAlgorithm algorithm = rule.getRuleAlgorithm();
 		for (ColumnRoutePair colPair : colRoutePairSet) {
@@ -1105,7 +1105,7 @@ public class RouterUtil {
 		
 		TableConfig tableConfig = schema.getTables().get(tableName);
 		if(tableConfig == null) {
-			String msg = "can't find table define in schema " + tableName + " schema:" + schema.getName();
+			String msg = "can't find table define in table " + tableName + " schema:" + schema.getName();
 			LOGGER.warn(msg);
 			throw new SQLNonTransientException(msg);
 		}
@@ -1122,9 +1122,6 @@ public class RouterUtil {
 		// CHENBO: 改成支持同时分库分表
 //        Set<String> tablesRouteSet = new HashSet<String>();
         
-        List<String> dataNodes = tableConfig.getDataNodes();
-		List<String> distTables = tableConfig.getDistTables();
-
 //        if(dataNodes.size()>1){
 //			String msg = "can't suport district table  " + tableName + " schema:" + schema.getName() + " for mutiple dataNode " + dataNodes;
 //        	LOGGER.warn(msg);
@@ -1153,115 +1150,59 @@ public class RouterUtil {
 
 			// CHENBO: 满足一条规则即可
 			RuleConfig partionRule = null;
-			String partionCol = null;
+			String[] partionCols = null;
+			Set<ColumnRoutePair>[] partionVals = null;
 			RuleConfig[] rules = tableConfig.getRules();
+
+
 			if (rules != null) {
 				for (RuleConfig rule : rules) {
-					String col = rule.getColumn();
-					if (columnsMap.get(col) != null) {
+					String[] cols = rule.getColumns();
+					Set<ColumnRoutePair>[] vals = new Set[cols.length];
+					boolean allFound = true;
+					int i = 0;
+					for (String col : cols) {
+						Set<ColumnRoutePair> val = columnsMap.get(col);
+						if (val == null || val.size() == 0) {
+							allFound = false;
+							break;
+						}
+
+						vals[i] = val;
+						i++;
+					}
+
+					if (allFound) {
 						partionRule = rule;
-						partionCol = col;
-						break;
+						partionCols = cols;
+						partionVals = vals;
 					}
 				}
 			}
 
-			Set<ColumnRoutePair> partitionValue = columnsMap.get(partionCol);
-			if(partitionValue == null || partitionValue.size() == 0) {
-//				tablesRouteSet.addAll(tableConfig.getDistTables());
+			if(partionRule == null) {
 				throw new IllegalArgumentException("route rule for table "
 						+ tableName + " is required: " + orgSql);
 			} else {
-				for(ColumnRoutePair pair : partitionValue) {
-					AbstractPartitionAlgorithm algorithmForNode = partionRule.getRuleAlgorithm();
-					AbstractPartitionAlgorithm algorithmForTable = partionRule.getRuleAlgorithmForTable();
-					if(pair.colValue != null) {
-						Integer nodeIndex = algorithmForNode.calculate(pair.colValue);
-						if(nodeIndex == null) {
-							String msg = "can't find any valid node :" + tableConfig.getName()
-									+ " -> " + partionCol + " -> " + pair.colValue;
-							LOGGER.warn(msg);
-							throw new SQLNonTransientException(msg);
-						}
+				String partionColForNode = partionCols[0];
+				String partionColForTable = (partionCols.length == 1) ? partionCols[0] : partionCols[1];
+				AbstractPartitionAlgorithm algorithmForNode = partionRule.getRuleAlgorithm();
+				AbstractPartitionAlgorithm algorithmForTable = partionRule.getRuleAlgorithmForTable();
 
-						Integer tableIndex = algorithmForTable.calculate(pair.colValue);
-						if(tableIndex == null) {
-							String msg = "can't find any valid table :" + tableConfig.getName()
-									+ " -> " + partionCol + " -> " + pair.colValue;
-							LOGGER.warn(msg);
-							throw new SQLNonTransientException(msg);
-						}
-
-						String nodeName = dataNodes.get(nodeIndex);
-						String subTable = distTables.get(tableIndex);
-						if(nodeName != null && subTable != null) {
-							Set<String> tableSet = tablesRouteSet.get(nodeName);
-							if (tableSet == null) {
-								tableSet = new HashSet<String>();
-								tablesRouteSet.put(nodeName, tableSet);
-
-								tableSet.add(subTable);
-								count++;
-							} else if (!tableSet.contains(subTable)) {
-								tableSet.add(subTable);
-								count++;
-							}
-
-							if(algorithmForTable instanceof SlotFunction){
-								rrs.getDataNodeSlotMap().put(subTable,((SlotFunction) algorithmForTable).slotValue());
-							}
-						}
+				if (partionCols.length == 1) {
+					for (ColumnRoutePair pair : partionVals[0]) {
+						count += findTableRoutes(tablesRouteSet, tableConfig, rrs,
+								partionColForNode, partionColForTable,
+								algorithmForNode, algorithmForTable,
+								pair, pair);
 					}
-					if(pair.rangeValue != null) {
-						Integer nodeIndexForBeginValue = algorithmForNode.calculate(pair.rangeValue.beginValue.toString());
-						if(nodeIndexForBeginValue == null) {
-							String msg = "can't find any valid node :" + tableConfig.getName()
-									+ " -> " + partionCol + " -> " + pair.rangeValue.beginValue;
-							LOGGER.warn(msg);
-							throw new SQLNonTransientException(msg);
-						}
-
-						Integer nodeIndexForEndValue = algorithmForNode.calculate(pair.rangeValue.endValue.toString());
-						if(nodeIndexForEndValue == null) {
-							String msg = "can't find any valid node :" + tableConfig.getName()
-									+ " -> " + partionCol + " -> " + pair.rangeValue.endValue;
-							LOGGER.warn(msg);
-							throw new SQLNonTransientException(msg);
-						}
-
-						if (nodeIndexForBeginValue != nodeIndexForEndValue) {
-							String msg = "cannot support different nodes for range :" + tableConfig.getName()
-									+ " -> " + partionCol + " -> (" + pair.rangeValue.beginValue
-									+ ", " + pair.rangeValue.endValue + ")";
-							LOGGER.warn(msg);
-							throw new SQLNonTransientException(msg);
-						}
-
-						String nodeName = dataNodes.get(nodeIndexForBeginValue);
-						if (nodeName != null) {
-							Integer[] tableIndexs = algorithmForTable.calculateRange(
-									pair.rangeValue.beginValue.toString(), pair.rangeValue.endValue.toString());
-
-							for (Integer idx : tableIndexs) {
-								String subTable = distTables.get(idx);
-								if (subTable != null) {
-									Set<String> tableSet = tablesRouteSet.get(nodeName);
-									if (tableSet == null) {
-										tableSet = new HashSet<String>();
-										tablesRouteSet.put(nodeName, tableSet);
-
-										tableSet.add(subTable);
-										count++;
-									} else if (!tableSet.contains(subTable)) {
-										tableSet.add(subTable);
-										count++;
-									}
-
-									if (algorithmForTable instanceof SlotFunction) {
-										rrs.getDataNodeSlotMap().put(subTable, ((SlotFunction) algorithmForTable).slotValue());
-									}
-								}
-							}
+				} else {
+					for (ColumnRoutePair pairForNode : partionVals[0]) {
+						for (ColumnRoutePair pairForTable : partionVals[1]) {
+							count += findTableRoutes(tablesRouteSet, tableConfig, rrs,
+									partionColForNode, partionColForTable,
+									algorithmForNode, algorithmForTable,
+									pairForNode, pairForTable);
 						}
 					}
 				}
@@ -1310,6 +1251,110 @@ public class RouterUtil {
 		return rrs;
 	}
 
+	private static int findTableRoutes(Map<String, Set<String>> tablesRouteSet,
+								TableConfig tableConfig, RouteResultset rrs,
+				   				String partionColForNode, String partionColForTable,
+								AbstractPartitionAlgorithm algorithmForNode, AbstractPartitionAlgorithm algorithmForTable,
+				   				ColumnRoutePair pairForNode, ColumnRoutePair pairForTable) throws SQLNonTransientException {
+
+		List<String> dataNodes = tableConfig.getDataNodes();
+		List<String> distTables = tableConfig.getDistTables();
+
+		int count = 0;
+		if(pairForNode.colValue != null) {
+			Integer nodeIndex = algorithmForNode.calculate(pairForNode.colValue);
+			if(nodeIndex == null) {
+				String msg = "can't find any valid node :" + tableConfig.getName()
+						+ " -> " + partionColForNode + " -> " + pairForNode.colValue;
+				LOGGER.warn(msg);
+				throw new SQLNonTransientException(msg);
+			}
+
+			Integer tableIndex = algorithmForTable.calculate(pairForTable.colValue);
+			if(tableIndex == null) {
+				String msg = "can't find any valid table :" + tableConfig.getName()
+						+ " -> " + partionColForTable + " -> " + pairForTable.colValue;
+				LOGGER.warn(msg);
+				throw new SQLNonTransientException(msg);
+			}
+
+			String nodeName = dataNodes.get(nodeIndex);
+			String subTable = distTables.get(tableIndex);
+			if(nodeName != null && subTable != null) {
+				Set<String> tableSet = tablesRouteSet.get(nodeName);
+				if (tableSet == null) {
+					tableSet = new HashSet<String>();
+					tablesRouteSet.put(nodeName, tableSet);
+
+					tableSet.add(subTable);
+					count++;
+				} else if (!tableSet.contains(subTable)) {
+					tableSet.add(subTable);
+					count++;
+				}
+
+				if(algorithmForTable instanceof SlotFunction){
+					rrs.getDataNodeSlotMap().put(subTable,((SlotFunction) algorithmForTable).slotValue());
+				}
+			}
+		}
+
+		if(pairForNode.rangeValue != null && pairForTable.rangeValue != null) {
+			Integer nodeIndexForBeginValue = algorithmForNode.calculate(pairForNode.rangeValue.beginValue.toString());
+			if(nodeIndexForBeginValue == null) {
+				String msg = "can't find any valid node :" + tableConfig.getName()
+						+ " -> " + partionColForNode + " -> " + pairForNode.rangeValue.beginValue;
+				LOGGER.warn(msg);
+				throw new SQLNonTransientException(msg);
+			}
+
+			Integer nodeIndexForEndValue = algorithmForNode.calculate(pairForNode.rangeValue.endValue.toString());
+			if(nodeIndexForEndValue == null) {
+				String msg = "can't find any valid node :" + tableConfig.getName()
+						+ " -> " + partionColForNode + " -> " + pairForNode.rangeValue.endValue;
+				LOGGER.warn(msg);
+				throw new SQLNonTransientException(msg);
+			}
+
+			if (nodeIndexForBeginValue != nodeIndexForEndValue) {
+				String msg = "cannot support different nodes for range :" + tableConfig.getName()
+						+ " -> " + partionColForNode + " -> (" + pairForNode.rangeValue.beginValue
+						+ ", " + pairForNode.rangeValue.endValue + ")";
+				LOGGER.warn(msg);
+				throw new SQLNonTransientException(msg);
+			}
+
+			String nodeName = dataNodes.get(nodeIndexForBeginValue);
+			if (nodeName != null) {
+				Integer[] tableIndexs = algorithmForTable.calculateRange(
+						pairForTable.rangeValue.beginValue.toString(), pairForTable.rangeValue.endValue.toString());
+
+				for (Integer idx : tableIndexs) {
+					String subTable = distTables.get(idx);
+					if (subTable != null) {
+						Set<String> tableSet = tablesRouteSet.get(nodeName);
+						if (tableSet == null) {
+							tableSet = new HashSet<String>();
+							tablesRouteSet.put(nodeName, tableSet);
+
+							tableSet.add(subTable);
+							count++;
+						} else if (!tableSet.contains(subTable)) {
+							tableSet.add(subTable);
+							count++;
+						}
+
+						if (algorithmForTable instanceof SlotFunction) {
+							rrs.getDataNodeSlotMap().put(subTable, ((SlotFunction) algorithmForTable).slotValue());
+						}
+					}
+				}
+			}
+		}
+
+		return count;
+	}
+
 	/**
 	 * 处理分库表路由
 	 */
@@ -1332,6 +1377,7 @@ public class RouterUtil {
 			}
 			if(tableConfig.getDistTables()!=null && tableConfig.getDistTables().size()>0){
 				routeToDistTableNode(tableName,schema,rrs,sql, tablesAndConditions, cachePool,isSelect);
+				continue;
 			}
 			//全局表或者不分库的表略过（全局表后面再计算）
 			if(tableConfig.isGlobalTable() || schema.getTables().get(tableName).getDataNodes().size() == 1) {
@@ -1389,11 +1435,14 @@ public class RouterUtil {
                 RuleConfig[] rules = tableConfig.getRules();
                 if (rules != null) {
                 	for (RuleConfig rule : rules) {
-                		String col = rule.getColumn();
-						if (columnsMap.get(col) != null) {
-							partionRule = rule;
-							partionCol = col;
-							break;
+                		String[] cols = rule.getColumns();
+                		if (cols.length == 1) {
+                			String col = cols[0];
+							if (columnsMap.get(col) != null) {
+								partionRule = rule;
+								partionCol = col;
+								break;
+							}
 						}
 					}
 				}
@@ -1533,34 +1582,24 @@ public class RouterUtil {
 			return true;
 		}
 
-		// CHENBO: 满足一条规则即可
-		Map<String, Boolean> colMap = new CaseInsensitiveMap();
-		RuleConfig[] rules = tc.getRules();
-		if (rules != null) {
-			for (RuleConfig rule : rules) {
-				colMap.put(rule.getColumn(), Boolean.TRUE);
-			}
-		}
+		Map<String, Set<ColumnRoutePair>> col2Values = routeUnit.getTablesAndConditions().get(tc.getName());
+		if (col2Values != null && col2Values.size() > 0) {
+			for (RuleConfig rule : tc.getRules()) {
+				boolean allFound = true;
+				for (String col : rule.getColumns()) {
+					Set<ColumnRoutePair> val = col2Values.get(col);
+					if (val == null || val.size() == 0) {
+						allFound = false;
+					}
+				}
 
-		boolean hasRequiredValue = false;
-		String tableName = tc.getName();
-		if(routeUnit.getTablesAndConditions().get(tableName) == null || routeUnit.getTablesAndConditions().get(tableName).size() == 0) {
-			hasRequiredValue = false;
-		} else {
-			for(Map.Entry<String, Set<ColumnRoutePair>> condition : routeUnit.getTablesAndConditions().get(tableName).entrySet()) {
-				String colName = condition.getKey();
-				//条件字段是拆分字段
-//				if(colName.equals(tc.getPartitionColumn())) {
-//					hasRequiredValue = true;
-//					break;
-//				}
-
-				if (colMap.containsKey(colName)) {
+				if (allFound) {
 					return true;
 				}
 			}
 		}
-		return hasRequiredValue;
+
+		return false;
 	}
 
 

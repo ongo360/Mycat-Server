@@ -66,8 +66,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 			statement = parser.parseStatement();
             visitor = new MycatSchemaStatVisitor();
 		} catch (Exception t) {
-	        LOGGER.error("DruidMycatRouteStrategyError", t);
-			throw new SQLSyntaxErrorException(t);
+			throw new SQLSyntaxErrorException("SQL parser error: " + stmt, t);
 		}
 
 		/**
@@ -150,7 +149,7 @@ public class DruidMycatRouteStrategy extends AbstractRouteStrategy {
 
 		for (String tableName : ctx.getTables()) {
 			TableConfig tableConfig = schema.getTables().get(tableName.toUpperCase());
-			if (tableConfig.isRuleRequired() && nodes.length > 1) {
+			if (tableConfig != null && tableConfig.isRuleRequired() && nodes.length > 1) {
 				throw new SQLNonTransientException("Across-node queries are forbidden. SQL: " + stmt);
 			}
 		}
