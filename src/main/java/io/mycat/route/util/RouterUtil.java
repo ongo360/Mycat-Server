@@ -1213,7 +1213,7 @@ public class RouterUtil {
 			throw new IllegalArgumentException("route rule for table "
 					+ tableName + " is required: " + orgSql);
 		} else if (count > 1) {
-			throw new IllegalArgumentException("cannot join multiple tables those are partitioned by subtable: " + orgSql);
+			throw new IllegalArgumentException("Across-table queries are forbidden. SQL: " + orgSql);
 		}
 
 		RouteResultsetNode[] nodes = new RouteResultsetNode[count];
